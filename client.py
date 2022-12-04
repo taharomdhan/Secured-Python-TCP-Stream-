@@ -1,13 +1,33 @@
 import socket
 import threading
+import time
+import pyotp
+import qrcode
 
 nickname = input("choose a nickname :   ")
-if nickname == 'admin': 
-    password = input("enter password for admin : ")
+key = pyotp.random_base32()
+
+totp = pyotp.TOTP(key)
+print(totp.now())
+qrcode.make(totp.now()).save("qr.png")
+input_code = input("Enter a 2FA Code : ")
+
+if totp.verify(input_code):
+
+    if nickname == 'admin': 
+        password = input("enter password for admin : ")
+else:
+    print("wrong code operation canceled")
+       
+
+    
 
 client = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 
 stop_thread = False
+
+if totp.verify(input_code)==False: 
+    stop_thread=True
 
 client.connect(('127.0.0.1',8080))
 
@@ -59,3 +79,4 @@ receive_thread.start()
 
 write_thread = threading.Thread(target=write)
 write_thread.start()
+
